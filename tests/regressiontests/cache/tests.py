@@ -17,7 +17,7 @@ from django.http import HttpResponse, HttpRequest
 from django.middleware.cache import FetchFromCacheMiddleware, UpdateCacheMiddleware
 from django.utils import translation
 from django.utils import unittest
-from django.utils.cache import patch_vary_headers, get_cache_key, learn_cache_key
+from django.utils.cache import patch_vary_headers, get_cache_key, learn_cache_key, has_vary_header
 from django.utils.hashcompat import md5_constructor
 from regressiontests.cache.models import Poll, expensive_calculation
 
@@ -543,6 +543,23 @@ class CacheUtils(unittest.TestCase):
                 response['Vary'] = initial_vary
             patch_vary_headers(response, newheaders)
             self.assertEqual(response['Vary'], resulting_vary)
+
+    def test_has_vary_header(self):
+        possible_headers = ('cookie', 'accept-encoding')
+        sample_values = (
+            # Vary header value, has_vary_header value for the possible_headers
+            ('Cookie', (True, False)),
+            ('COOKIE', (True, False)),
+            ('Accept-Encoding', (False, True)),
+            ('Cookie, Accept-Encoding', (True, True)),
+            ('Accept-Encoding, Cookie', (True, True)),
+            ('Cookie    ,     Accept-Encoding', (True, True)),
+        )
+        for vary_header, results in sample_values:
+            response = HttpResponse()
+            response['Vary'] = vary_header
+            for test_header, result in zip(possible_headers, results):
+                self.assertEqual(has_vary_header(response, test_header), result)
 
     def test_get_cache_key(self):
         request = self._get_request(self.path)
