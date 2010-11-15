@@ -323,14 +323,14 @@ Then, add the following required settings to your Django settings file:
   collisions. Use an empty string if you don't care.
 
 The cache middleware caches every page that doesn't have GET or POST
-parameters. Optionally, if the ``CACHE_MIDDLEWARE_ANONYMOUS_ONLY`` setting is
-``True``, only anonymous requests (i.e., not those made by a logged-in user)
-will be cached. This is a simple and effective way of disabling caching for any
-user-specific pages (include Django's admin interface). Note that if you use
-``CACHE_MIDDLEWARE_ANONYMOUS_ONLY``, you should make sure you've activated
-``AuthenticationMiddleware``. The cache middleware expects that a HEAD request
-is answered with the same response headers exactly like the corresponding GET
-request, in that case it could return cached GET response for HEAD request.
+parameters. Pages are cached separately based on the values of the HTTP headers
+they vary by, so user-specific pages will never be shown to the wrong person if
+you're accessing the user's information via
+:attr:`request.user <django.http.HttpRequest.user>`, which results in the
+appropriate ``Vary`` headers being set. The cache middleware expects that a HEAD
+request is answered with the same response headers exactly like the
+corresponding GET request, in that case it could return cached GET response for
+HEAD request.
 
 Additionally, the cache middleware automatically sets a few headers in each
 ``HttpResponse``:
